@@ -1,0 +1,7 @@
+{
+  "editor.tabSize": 2,
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.implementationsCodeLens.enabled": true,
+  "editor.detectIndentation": false,
+  "typescript.preferences.quoteStyle": "single"
+}
