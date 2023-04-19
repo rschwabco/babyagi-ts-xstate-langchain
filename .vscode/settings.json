@@ -3,5 +3,6 @@
   "typescript.referencesCodeLens.enabled": true,
   "typescript.implementationsCodeLens.enabled": true,
   "editor.detectIndentation": false,
-  "typescript.preferences.quoteStyle": "single"
+  "typescript.preferences.quoteStyle": "single",
+  "dotenv.enableAutocloaking": false
 }

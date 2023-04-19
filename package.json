@@ -36,7 +36,14 @@
   },
   "dependencies": {
     "@datastructures-js/deque": "^1.0.4",
+    "@pinecone-database/pinecone": "^0.0.12",
+    "cheerio": "^1.0.0-rc.12",
     "console-log-colors": "^0.4.0",
+    "console-table-printer": "^2.11.1",
+    "console.table": "^0.10.0",
+    "dotenv": "^16.0.3",
+    "inquirer": "^8.0.1",
+    "langchain": "^0.0.57",
     "xstate": "^4.37.1"
   }
 }
