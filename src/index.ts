@@ -1,4 +1,3 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { SerpAPI, Tool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";

@@ -125,7 +125,7 @@ class AgentMachine {
                 target: "executingPlan",
               },
               {
-                cond: (context, event) => event.data.type === "OBJECTIVE_COMPLETE",
+                cond: (_, event) => event.data.type === "OBJECTIVE_COMPLETE",
                 target: "planComplete"
               },
             ],
@@ -249,7 +249,6 @@ class AgentMachine {
           } catch (e) {
             log(true)(red(`Unable to evaluate task ${e}`));
           }
-
         },
 
         checkObjectiveSuccess: async (context: AgentContext) => {

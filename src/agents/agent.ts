@@ -28,7 +28,13 @@ const formatInstructions = (toolNames: string) => `Use the following format:
 
 Task: the input task you must accomplish
 Thought: you should always think about what to do
-Action: the action to take, should be one of [${toolNames}]
+Action: the action to take, should be one of the following tools
+${toolNames} in that order of priority.
+You should only use the "userPrompt" if no other tools is applicable.
+Always prioritize using the tools over the userPrompt.
+Use the "userPrompt" as a last resort or if the user is the BEST resource for information to accomplish the task.
+Before using "userPrompt", use all other tools.
+
 Action Input: the input to the action
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
@@ -56,7 +62,7 @@ class CustomPromptTemplate extends BaseStringPromptTemplate {
     const toolStrings = this.tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const toolNames = this.tools.map((tool) => tool.name).join("\n");
+    const toolNames = this.tools.map((tool, key) => `${key + 1}. ${tool.name}`).join("\n");
     const instructions = formatInstructions(toolNames);
     const template = [PREFIX, toolStrings, instructions, SUFFIX].join("\n\n");
     /** Construct the agent_scratchpad */
