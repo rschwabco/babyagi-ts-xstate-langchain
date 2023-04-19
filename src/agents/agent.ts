@@ -1,7 +1,8 @@
+import { italic } from "console-log-colors";
 import {
-  LLMSingleActionAgent,
   AgentActionOutputParser,
   AgentExecutor,
+  LLMSingleActionAgent,
   Tool,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
@@ -13,13 +14,12 @@ import {
   renderTemplate,
 } from "langchain/prompts";
 import {
-  InputValues,
-  PartialValues,
-  AgentStep,
   AgentAction,
   AgentFinish,
+  AgentStep,
+  InputValues,
+  PartialValues,
 } from "langchain/schema";
-import { color, log, red, green, cyan, cyanBright, yellow, blue, blueBright, bgBlueBright, italic, yellowBright, bgGreenBright, bgRedBright } from "console-log-colors";
 
 const PREFIX = `Execute the following task as best you can.
 This is what you already know: {context}

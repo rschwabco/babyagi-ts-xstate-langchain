@@ -1,34 +1,28 @@
 /* eslint-disable max-len */
-import { createMachine, assign, interpret, send, raise, Machine } from "xstate";
 import { Deque } from "@datastructures-js/deque";
-import { color, log, red, green, cyan, cyanBright, yellow, blue, blueBright, bgBlueBright, italic, yellowBright, bgGreenBright, bgRedBright, blueBG } from "console-log-colors";
-import * as inquirer from "inquirer";
-import { OpenAI } from "langchain/llms/openai";
-import { config } from "dotenv";
-import { PlanGenerationChain } from "./chains/planGenerationChain";
+import { bgBlueBright, bgGreenBright, bgRedBright, blue, blueBG, green, red, yellowBright } from "console-log-colors";
 import { printTable } from "console-table-printer";
-import { TaskEvaluationChain } from "./chains/taskEvaluationChain";
-import { ObjectiveEvaluationChain } from "./chains/objectiveEvaulationChain";
-import { WebBrowser } from "langchain/tools/webbrowser";
+import { config } from "dotenv";
+import * as inquirer from "inquirer";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI } from "langchain/llms/openai";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
+import { WebBrowser } from "langchain/tools/webbrowser";
+import { assign, createMachine, interpret } from "xstate";
+import { CustomAgent } from "./agents/agent";
+import { AnswerGenerationChain } from "./chains/answerGenerationChain";
+import { ObjectiveEvaluationChain } from "./chains/objectiveEvaulationChain";
+import { PlanGenerationChain } from "./chains/planGenerationChain";
+import { RetryTaskChain } from "./chains/retryTaskChain";
+import { TaskEvaluationChain } from "./chains/taskEvaluationChain";
+
 config();
 
 const embeddings = new OpenAIEmbeddings();
 const model = new OpenAI({ temperature: 0 });
 const browser = new WebBrowser({ model, embeddings });
 
-import {
-  ZapierNLAWrapper, RequestsGetTool,
-  RequestsPostTool,
-  AIPluginTool
-} from "langchain/tools";
-import { ZapierToolKit } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
-import { CustomAgent } from "./agents/agent";
-import { Calculator } from "langchain/tools/calculator";
-import { RetryTaskChain } from "./chains/retryTaskChain";
-import { AnswerGenerationChain } from "./chains/answerGenerationChain";
-import { PineconeClient } from "@pinecone-database/pinecone";
 
 
 interface Task {
@@ -48,8 +42,6 @@ interface AgentContext {
 }
 
 const machine = createMachine({
-  // eslint-disable-next-line max-len
-  /** @xstate-layout N4IgpgJg5mDOIC5QEEYDsAuA6AlmnGOAhgDYDEEA9mmLmgG6UDWtMGA8gEYBWYAxoXpgA2gAYAuolAAHSrAI5qUkAA9EAZgAs6rJoAc2gOwAmAGwBOTaMOnNpgDQgAnon3msARkOiArHr3GPj7q6hY+AL7hjqhgmFjSJERo+GhQFNS0eIwsWOhgAE5EGGAAColoYpJIILLyhErVagh65sZYhpbGhh7GHqai6oaGji4Ibp7efgFBIWGR0ejYYCr8AK6EqWVJ6TR02bTLa8UAcssYACpEsEyVyrUKDaBN5i2eph52Ztbm3cPOiIE2j4fqZ1KIPuYfF5DHp5iAYnEwPRSKsimBLtcdpkGMxaHwABb8JgAZVWfD4cFgt2q93qaGUTRabQ6mi6PT6AyGIw0mh8WFMPmMWg+xiFhgiUXhiywSJRaIxTCxe1xWAJRNJ5Mpwg8VRkcge9MaiCZ7U63V6-UGf1GHmsWFFZnF+gdrQlC1iS2RJFRxQVZAK+Uo+XiiQwADMgwBbVWEvgkskU2BUiR3fV0hnG1qm1nmjlW7kIYy+TyaDytXyQ13mOEIz1y31XRXnZDEgDSAH1iQBVADCPYAosTidS9XVFIanpnmWb2Zauf8EOpzDpbXpfKIfsDTBYa9LZd75Y2yM22+2AGLIACSABl+wAREc1NPjjPNLMstkWznWxAeHyafkYXUPQfAGPxeh6SJJTQSgIDgZRa1TMdHlURAAFoHAXNC+XMXC8Pw-D1F3D06AUUgkINV9WQLfRDF0bwPA8PRLX6PQtGIuIEiSFIoAo9MjQQYJTCwURjFw0tggMYxNB-MY9DomTwSYljRDYzQOKWFY+HWPAoC2Ccn2QgymnZACoTBMSfFMMTOQLYC+WYvwTChMTBnUyVaxlL0fXRRs+JfATBWEqEAi0PxQnUKE7PeQDnKFL5gTYjSQySM8iBwEhIH8lCTN6MyPAsyFrPMWyFzLYT5O3AwlzBcxbUMZKuLQHtKEjBIwGKbLjN-PKsHM0SipswYCz0Dx6Lq5dFJAgJTCg8IgA */
   id: "Agent",
   initial: "initial",
   context: {
