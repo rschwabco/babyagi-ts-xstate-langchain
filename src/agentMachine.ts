@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
 import { Deque } from "@datastructures-js/deque";
-import { bgBlueBright, bgGreenBright, bgRedBright, blue, blueBG, green, red, yellowBright } from "console-log-colors";
+import { bgBlueBright, bgGreenBright, bgRedBright, blue, blueBG, green, red, redBG, yellowBright } from "console-log-colors";
 import { printTable } from "console-table-printer";
 import { config } from "dotenv";
 import * as inquirer from "inquirer";
-import { assign, createMachine, interpret } from "xstate";
+import { assign, createMachine, interpret, sendParent, spawn } from "xstate";
 import { CustomAgent } from "./agents/agent";
 import { AnswerGenerationChain } from "./chains/answerGenerationChain";
 import { ObjectiveEvaluationChain } from "./chains/objectiveEvaulationChain";
@@ -14,6 +14,7 @@ import { TaskEvaluationChain } from "./chains/taskEvaluationChain";
 import { AgentContext, Task } from "./types";
 import { BaseLLM } from "langchain/llms/base";
 import { Tool } from "langchain/tools";
+import { respond, sendTo } from "xstate/lib/actions";
 
 config();
 
@@ -30,7 +31,61 @@ class AgentMachine {
   private tools: Tool[];
   private llm: BaseLLM;
   private machine: any;
+  private taskRunner: any;
   constructor(llm: BaseLLM, tools: Tool[], verbose = false) {
+
+    this.taskRunner = createMachine({
+      /** @xstate-layout N4IgpgJg5mDOIC5QBcCGsDWAlArgOzzACcA6ASzzOTNQBsBiCAe0PLwDcmMwSALMWrSYBlYuzIBjMAG0ADAF1EoAA5NYVMiyUgAHogCMsgCwkAbAE4ArAGZr50wA5L+gEyWANCACeiB-pJGAOzm+qYuDuYOsqbWRvoAvomeeEwQcNpomLgExNqq6tRaSLqIALT6nj4IpaYksvWyLsHh1pYuprIOSSCZ2PiEpBQadHlqGkWgeghBlQbBJDbWDjFGHY5RlomJQA */
+      id: "taskRunner",
+      context: {
+        task: null,
+        taskResult: null,
+      },
+      initial: "initial",
+      states: {
+        initial: {
+          invoke: {
+            id: "helloService",
+            src: "helloService",
+          },
+          on: {
+            TASK: {
+              target: "executingTask",
+              actions: assign({
+                task: (_, event) => event.data,
+              })
+            }
+          }
+        },
+        executingTask: {
+          invoke: {
+            id: "executeTask",
+            src: "executeTask",
+            onDone: {
+              actions: sendParent({ type: "TASK_COMPLETE_BY_RUNNER", data: (_, event) => event.data }),
+            }
+          }
+        }
+      },
+      schema: {
+        events: {} as
+          { type: "TASK", data: Task }
+      },
+      predictableActionArguments: true
+    }, {
+      services: {
+        helloService: async () => {
+          console.log(bgBlueBright("HELLO SERVICE"));
+          return "hello";
+        },
+        executeTask: async (context: any) => {
+          console.log(bgBlueBright(`EXECUTE TASK SERVICE ${context.task.description}`));
+          return "Task executed";
+        }
+
+      }
+    });
+
     this.machine = createMachine({
       id: "Agent",
       initial: "initial",
@@ -39,6 +94,7 @@ class AgentMachine {
         tasks: new Deque<Task>(),
         completedTasks: new Deque<Task>(),
         currentTask: null,
+        taskRunner: null,
       } as AgentContext,
       states: {
         initial: {
@@ -66,6 +122,18 @@ class AgentMachine {
           },
         },
         executingPlan: {
+          entry: ["sayHello", "sendTask"],
+          on: {
+            TASK_COMPLETE_BY_RUNNER: {
+              actions: assign({
+                objective: (context, event) => {
+                  console.log(redBG("HELLO!!!"));
+                  console.log(event);
+                  return context.objective;
+                }
+              })
+            }
+          },
           invoke: {
             id: "executeNextTask",
             src: "executeNextTask",
@@ -167,7 +235,8 @@ class AgentMachine {
           { type: "TASK_DONE" } |
           { type: "TASK_FAILED" } |
           { type: "TASK_SUCCESS" } |
-          { type: "ALL_TASKS_DONE" }
+          { type: "ALL_TASKS_DONE" } |
+          { type: "TASK_COMPLETE_BY_RUNNER" }
       },
       predictableActionArguments: true,
       preserveActionOrder: true,
@@ -188,7 +257,11 @@ class AgentMachine {
         generatePlan: async (context: AgentContext) => {
           log(verbose)(green("Generating plan..."));
           const planGenerationChain = PlanGenerationChain.fromLLM(llm, false);
-          const tasksRaw = await planGenerationChain.call({ objective: context.objective });
+          const tasksRaw = await planGenerationChain.call({
+            objective: context.objective, tools: tools.map((tool) => {
+              return `${tool.name} - ${tool.description}`;
+            }).join(",")
+          });
           const tasks = tasksRaw.text.trim().split("\n").map((taskRaw) => {
             const taskParts = taskRaw.split(".");
             return {
@@ -323,8 +396,22 @@ class AgentMachine {
             log(true)(red(`Unable to generate answer ${e}`));
           }
         }
+      },
+      actions: {
+        sayHello: assign({
+          taskRunner: () => {
+            console.log(bgGreenBright("SPAWNED TASK RUNNER"));
+            return spawn(this.taskRunner);
+          }
+        }),
+        sendTask: sendTo((context) => context.taskRunner, (context) => {
+          return { type: "TASK", data: { task: context.currentTask } };
+        })
       }
     });
+
+
+
   }
 
   public async start() {

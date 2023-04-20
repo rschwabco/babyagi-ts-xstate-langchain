@@ -11,4 +11,5 @@ export interface AgentContext {
   tasks: Deque<Task>;
   completedTasks: Deque<Task>;
   currentTask: Task | null;
+  taskRunner: any
 }

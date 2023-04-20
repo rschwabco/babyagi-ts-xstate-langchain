@@ -9,7 +9,8 @@ class PlanGenerationChain extends LLMChain {
   static fromLLM(llm: BaseLLM, verbose = true): LLMChain {
     // Get the response parser.
     const planGenerationChainTemplate: string =
-      " You are an plan creation AI that uses creates a plan for a given objective" +
+      " You are a plan creation AI that uses creates a plan for a given objective" +
+      " This plan will be executed by an AI capable of using the following tools: {tools}" +
       " create a numbered list of tasks with the following objective: {objective}," +
       " each task should be a string that is a sentence." +
       " each task should be isolated from the one another. " +
@@ -21,7 +22,7 @@ class PlanGenerationChain extends LLMChain {
 
     const prompt: PromptTemplate = new PromptTemplate({
       template: planGenerationChainTemplate,
-      inputVariables: ["objective"],
+      inputVariables: ["objective", "tools"],
     });
 
     return new PlanGenerationChain({

@@ -7,7 +7,7 @@ import { AgentMachine } from "./agentMachine";
 // Create the agent machine.
 const model = new OpenAI({ temperature: 0 });
 const tools: Tool[] = [new Calculator(), new SerpAPI(), new UserPrompt()];
-const agentMachine = new AgentMachine(model, tools, true);
+const agentMachine = new AgentMachine(model, tools, false);
 
 const main = async () => {
   // Start the agent machine.
